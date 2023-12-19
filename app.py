@@ -1,39 +1,35 @@
 import pickle
-
 import pandas as pd
 import requests
 import streamlit as st
-
 
 def fetch_poster(movie_id):
     response = requests.get('https://api.themoviedb.org/3/movie/{}?api_key=816e7e360da31b8177a7972949dfb046'.format(movie_id))
     data = response.json()
     return 'https://image.tmdb.org/t/p/w500/' + data['poster_path']
 
-def recommend(movie):
-    movie_index = movies[movies['title'] == movie].index[0]
-    distances = similarity[movie_index]
-    movies_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
-    recommended_movies = []
-    recommended_movies_posters = []
-    for i in movies_list:
-        movie_id = movies.iloc[i[0]].movie_id
-        recommended_movies.append(movies.iloc[i[0]].title)
-        recommended_movies_posters.append(fetch_poster(movie_id))
-    return recommended_movies,recommended_movies_posters
+def load_pickle_from_github(file_url):
+    response = requests.get(file_url)
+    data = pickle.loads(response.content)
+    return data
 
-movies_dict = pickle.load(open('F:\\class\\Machine Learning\\practice\\Movie_Recommend_system\\movie_dict.pkl','rb'))
+# Load pickled files from GitHub
+movies_dict_url = 'https://raw.githubusercontent.com/DreamIsMl/Movie-Recommended-System/main/movie_dict.pkl'
+similarity_url = 'https://raw.githubusercontent.com/DreamIsMl/movie-model/main/similarity.pkl'
+
+movies_dict = load_pickle_from_github(movies_dict_url)
 movies = pd.DataFrame(movies_dict)
-similarity = pickle.load(open('F:\\class\\Machine Learning\\practice\\Movie_Recommend_system\\similarity.pkl','rb'))
+similarity = load_pickle_from_github(similarity_url)
 
 st.title('Movie Recommender System By Hakim')
 
 Selected_movie_name = st.selectbox(
-    'How Would Like To Be Contacted',
-movies['title'].values)
+    'How Would You Like To Be Contacted',
+    movies['title'].values
+)
 
 if st.button('Recommend'):
-    names,posters = recommend(Selected_movie_name)
+    names, posters = recommend(Selected_movie_name)
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
@@ -45,12 +41,11 @@ if st.button('Recommend'):
     with col3:
         st.text(names[2])
         st.image(posters[2])
-    
+
     with col4:
         st.text(names[3])
         st.image(posters[3])
-    
+
     with col5:
         st.text(names[4])
         st.image(posters[4])
-        
